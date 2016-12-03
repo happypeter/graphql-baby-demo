@@ -2,7 +2,8 @@ var {
   GraphQLSchema,
   GraphQLObjectType,
   GraphQLString,
-  GraphQLID
+  GraphQLID,
+  GraphQLList
 } = require('graphql');
 
 const User = require('../models/user');
@@ -34,7 +35,13 @@ module.exports = new GraphQLSchema({
           }
         },
         resolve: (_, {id}) => {
-          return User.findById(id).exec().then(user => user)
+          return User.findById(id).exec().then(user => user);
+        }
+      },
+      users: {
+        type: new GraphQLList(userType),
+        resolve: () => {
+          return User.find({}).exec().then(users => users);
         }
       }
     }
