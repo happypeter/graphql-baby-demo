@@ -3,7 +3,8 @@ var {
   GraphQLObjectType,
   GraphQLString,
   GraphQLID,
-  GraphQLList
+  GraphQLList,
+  GraphQLInt
 } = require('graphql');
 
 const User = require('../models/user');
@@ -40,8 +41,13 @@ module.exports = new GraphQLSchema({
       },
       users: {
         type: new GraphQLList(userType),
+        args: {
+          count: {
+            type: GraphQLInt
+          }
+        },
         resolve: () => {
-          return User.find({}).exec().then(users => users);
+          return User.find({}).limit(count).exec().then(users => users);
         }
       }
     }
