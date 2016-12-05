@@ -4,14 +4,17 @@ var {
   GraphQLString,
   GraphQLID,
   GraphQLList,
-  GraphQLInt
+  GraphQLInt,
+  GraphQLBoolean,
+  GraphQLNonNull,
+  GraphQLInputObjectType
 } = require('graphql');
 
 const User = require('../models/user');
 
 const userType = new GraphQLObjectType({
   name: 'User',
-  fields: {
+  fields: () => ({
     _id: {
       type: GraphQLID
     },
@@ -20,9 +23,25 @@ const userType = new GraphQLObjectType({
     },
     email: {
       type: GraphQLString
+    },
+    friends: {
+      type: new GraphQLList(userType),
+      resolve: (user) => {
+        return user.friends.map((id, i) => {
+          return User.findById(id).exec().then(user => user)
+        })
+      }
     }
-  }
+  })
 })
+
+const userInputType = new GraphQLInputObjectType({
+  name: 'UserInput',
+  fields: {
+    name: {type: GraphQLString},
+    email: {type: GraphQLString}
+  }
+});
 
 module.exports = new GraphQLSchema({
   query: new GraphQLObjectType({
@@ -46,8 +65,26 @@ module.exports = new GraphQLSchema({
             type: GraphQLInt
           }
         },
-        resolve: () => {
+        resolve: (_, {count}) => {
           return User.find({}).limit(count).exec().then(users => users);
+        }
+      }
+    }
+  }),
+  mutation: new GraphQLObjectType({
+    name: 'MyMutation',
+    fields: {
+      addUser: {
+        type: GraphQLBoolean,
+        args: {
+          data: {
+            type: new GraphQLNonNull(userInputType)
+          }
+        },
+        resolve: (_, {data}) => {
+          const user = new User(data);
+          user.save()
+          return true
         }
       }
     }
