@@ -86,6 +86,36 @@ module.exports = new GraphQLSchema({
           user.save()
           return true
         }
+      },
+      updateUser: {
+        type: GraphQLBoolean,
+        args: {
+          id: {
+            type: new GraphQLNonNull(GraphQLID)
+          },
+          data: {
+            type: new GraphQLNonNull(userInputType)
+          }
+        },
+        resolve: (_, {id, data}) => {
+          return User.findById(id).exec().then(user => {
+            user.name = data.name
+            user.email = data.email
+            user.save()
+            return true
+          })
+        }
+      },
+      deleteUser: {
+        type: userType,
+        args: {
+          id: {
+            type: new GraphQLNonNull(GraphQLID)
+          }
+        },
+        resolve: (_, {id}) => {
+          return User.findByIdAndRemove(id).exec().then(user => user);
+        }
       }
     }
   })
